@@ -1,0 +1,64 @@
+name: Upstream Sync
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron: "20 1 * * *"  # 每天凌晨 1:20 点检查更新
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    name: Sync latest commits from upstream repo
+    runs-on: ubuntu-latest
+    if: ${{ github.event.repository.fork }}
+
+    env:
+      UPSTREAM_REPO: cmliu/edgetunnel       # 设置上游仓库路径（格式：user/repo）
+      UPSTREAM_BRANCH: main                 # 设置上游分支名称
+
+    steps:
+      # Step 1: Checkout target repo
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      # Step 2: Add upstream repository and fetch
+      - name: Fetch upstream repository
+        run: |
+          git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git
+          git fetch upstream ${{ env.UPSTREAM_BRANCH }}
+
+      # Step 3: Check for updates
+      - name: Check for updates
+        id: check_update
+        run: |
+          UPSTREAM_COMMIT=$(git rev-parse upstream/${{ env.UPSTREAM_BRANCH }})
+          LOCAL_COMMIT=$(git rev-parse HEAD)
+          if [ "$UPSTREAM_COMMIT" != "$LOCAL_COMMIT" ]; then
+            echo "Upstream has new commits. Syncing required."
+            echo "needs_sync=true" >> $GITHUB_ENV  # 使用环境文件设置变量
+          else
+            echo "No updates in upstream. Skipping sync."
+            echo "needs_sync=false" >> $GITHUB_ENV  # 使用环境文件设置变量
+          fi
+
+      # Step 4: Sync with upstream if updates are found
+      - name: Sync with upstream
+        if: ${{ env.needs_sync == 'true' }}  # 通过环境变量进行条件判断
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          upstream_sync_repo: ${{ env.UPSTREAM_REPO }}
+          upstream_sync_branch: ${{ env.UPSTREAM_BRANCH }}
+          target_sync_branch: ${{ env.UPSTREAM_BRANCH }}
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+#        repo:
+#          - { target_repo: "darrelltc/edgetunnel", upstream_repo: "cmliu/edgetunnel", branch: "main" }
+#          - { target_repo: "darrelltc/Serv00-LoadBalance", upstream_repo: "KusanagiKW/Serv00-LoadBalance", branch: "main" }
+#          - { target_repo: "darrelltc/WorkerVless2sub", upstream_repo: "cmliu/WorkerVless2sub", branch: "main" }
+#          - { target_repo: "darrelltc/CF-Workers-SUB", upstream_repo: "cmliu/CF-Workers-SUB", branch: "main" }
+#          - { target_repo: "darrelltc/gfwlist", upstream_repo: "gfwlist/gfwlist", branch: "master" }
+
