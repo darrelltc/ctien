@@ -1,9 +1,9 @@
 [
   { "domain": "ctien.cloudns.be", "registrationDate": "2024-08-17", "expirationDate": "2099-12-31", "system": "Cloudns", "systemURL": "https://www.cloudns.net/" },
-  { "domain": "ctien.us.kg", "registrationDate": "20240821", "expirationDate": "20250821", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
-  { "domain": "stien.us.kg", "registrationDate": "20240906", "expirationDate": "20250906", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
-  { "domain": "utien.us.kg", "registrationDate": "20240906", "expirationDate": "20250906", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
-  { "domain": "ctien.filegear-sg.me", "registrationDate": "20240516", "expirationDate": "20250516", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "stien.filegear-sg.me", "registrationDate": "20240517", "expirationDate": "20250517", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "freetien.filegear-sg.me", "registrationDate": "20240517", "expirationDate": "20250517", "system": "l53", "systemURL": "https://customer.l53.net/" }
+  { "domain": "ctien.us.kg", "registrationDate": "2024-08-21", "expirationDate": "2025-08-21", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
+  { "domain": "stien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
+  { "domain": "utien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
+  { "domain": "ctien.filegear-sg.me", "registrationDate": "2024-05-16", "expirationDate": "2025-05-16", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "stien.filegear-sg.me", "registrationDate": "2024-05-17", "expirationDate": "2025-05-17", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "freetien.filegear-sg.me", "registrationDate": "2024-05-17", "expirationDate": "2025-05-17", "system": "l53", "systemURL": "https://customer.l53.net/" }
 ]
