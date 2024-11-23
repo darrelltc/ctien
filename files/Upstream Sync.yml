@@ -5,7 +5,7 @@ permissions:
 
 on:
   schedule:
-    - cron: "20 1 * * *"  # 每天凌晨 1:20 点检查更新
+    - cron: "0 0 * * *" # every day
   workflow_dispatch:
 
 jobs:
@@ -14,51 +14,27 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.repository.fork }}
 
-    env:
-      UPSTREAM_REPO: cmliu/edgetunnel       # 设置上游仓库路径（格式：user/repo）
-      UPSTREAM_BRANCH: main                 # 设置上游分支名称
-
     steps:
-      # Step 1: Checkout target repo
+      # Step 1: run a standard checkout action
       - name: Checkout target repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # Step 2: Add upstream repository and fetch
-      - name: Fetch upstream repository
-        run: |
-          git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git
-          git fetch upstream ${{ env.UPSTREAM_BRANCH }}
-
-      # Step 3: Check for updates
-      - name: Check for updates
-        id: check_update
-        run: |
-          UPSTREAM_COMMIT=$(git rev-parse upstream/${{ env.UPSTREAM_BRANCH }})
-          LOCAL_COMMIT=$(git rev-parse HEAD)
-          if [ "$UPSTREAM_COMMIT" != "$LOCAL_COMMIT" ]; then
-            echo "Upstream has new commits. Syncing required."
-            echo "needs_sync=true" >> $GITHUB_ENV  # 使用环境文件设置变量
-          else
-            echo "No updates in upstream. Skipping sync."
-            echo "needs_sync=false" >> $GITHUB_ENV  # 使用环境文件设置变量
-          fi
-
-      # Step 4: Sync with upstream if updates are found
-      - name: Sync with upstream
-        if: ${{ env.needs_sync == 'true' }}  # 通过环境变量进行条件判断
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      # Step 2: run the sync action
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          upstream_sync_repo: ${{ env.UPSTREAM_REPO }}
-          upstream_sync_branch: ${{ env.UPSTREAM_BRANCH }}
-          target_sync_branch: ${{ env.UPSTREAM_BRANCH }}
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_repo: cmliu/CF-Workers-SUB
+          upstream_sync_branch: main
+          target_sync_branch: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }} # automatically generated, no need to set
 
+          # Set test_mode true to run tests instead of the true action!!
+          test_mode: false
 
-
-#        repo:
-#          - { target_repo: "darrelltc/edgetunnel", upstream_repo: "cmliu/edgetunnel", branch: "main" }
-#          - { target_repo: "darrelltc/Serv00-LoadBalance", upstream_repo: "KusanagiKW/Serv00-LoadBalance", branch: "main" }
-#          - { target_repo: "darrelltc/WorkerVless2sub", upstream_repo: "cmliu/WorkerVless2sub", branch: "main" }
-#          - { target_repo: "darrelltc/CF-Workers-SUB", upstream_repo: "cmliu/CF-Workers-SUB", branch: "main" }
-#          - { target_repo: "darrelltc/gfwlist", upstream_repo: "gfwlist/gfwlist", branch: "master" }
-
+      - name: Sync check
+        if: failure()
+        run: |
+          echo "[Error] 由于上游仓库的 workflow 文件变更，导致 GitHub 自动暂停了本次自动更新，你需要手动 Sync Fork 一次，详细教程请查看项目README.md "
+          echo "[Error] Due to a change in the workflow file of the upstream repository, GitHub has automatically suspended the scheduled automatic update. You need to manually sync your fork. Please refer to the project README.md for instructions. "
+          exit 1
