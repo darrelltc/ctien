@@ -364,27 +364,35 @@ get_ip() {
 }
 
 # 生成节点链接并写入到list.txt，同时检查 socks5 连接是否有效
-get_links(){
-argodomain=$(get_argodomain)
-echo -e "\e[1;32mArgoDomain:\e[1;35m${argodomain}\e[0m\n"
-sleep 1
-IP=$(get_ip)
-ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g') 
-sleep 1
-yellow "注意：v2ray或其他软件的跳过证书验证需设置为true,否则hy2或tuic节点可能不通\n"
-cat > list.txt <<EOF
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$IP\", \"port\": \"$vless_port\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"\", \"path\": \"/vless?ed=2048\", \"tls\": \"\", \"sni\": \"\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+get_links() {
+  argodomain=$(get_argodomain)
+  if [[ -z "$argodomain" ]]; then
+    red "无法获取 Argo 域名，请检查配置。"
+    return 1
+  fi
 
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$CFIP\", \"port\": \"$CFPORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/vless?ed=2048\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+  echo -e "\e[1;32mArgoDomain:\e[1;35m${argodomain}\e[0m\n"
+  IP=$(get_ip)
+  if [[ -z "$IP" ]]; then
+    red "无法获取服务器 IP，请检查网络连接。"
+    return 1
+  fi
 
+  ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
+  yellow "注意：使用 vless 需配置 TLS 或其他安全加密方式\n"
+
+  cat > list.txt <<EOF
+vless://$UUID@$IP:$vless_port?net=ws&host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=/vless?ed=2048&alpn=h2#VlessNode
+vless://$UUID@$CFIP:$CFPORT?net=ws&host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=/vless?ed=2048&alpn=h2#Vless-Argo
 hysteria2://$UUID@$IP:$hy2_port/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
-
 socks5://$socks_user:$socks_pass@$IP:$socks_port
 EOF
-cat list.txt
-purple "\n$WORKDIR/list.txt 节点文件已保存"
-green "安装完成"
-sleep 2
+
+  cat list.txt
+  purple "\n$WORKDIR/list.txt 节点文件已保存"
+  green "安装完成"
+}
+
 
 response=$(curl -s ip.sb --socks5 "$socks_user:$socks_pass@localhost:$socks_port")
   if [[ $? -eq 0 ]]; then
