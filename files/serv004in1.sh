@@ -391,6 +391,7 @@ EOF
   cat list.txt
   purple "\n$WORKDIR/list.txt 节点文件已保存"
   green "安装完成"
+}
 
 response=$(curl -s ip.sb --socks5 "$socks_user:$socks_pass@localhost:$socks_port")
   if [[ $? -eq 0 ]]; then
@@ -402,7 +403,7 @@ response=$(curl -s ip.sb --socks5 "$socks_user:$socks_pass@localhost:$socks_port
   else
     red "SOCKS5 连接无效，检查端口设置是否正确"
   fi
-}
+
 
 # 是否创建面板corn定时任务
 creat_corn() {
