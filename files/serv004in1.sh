@@ -20,9 +20,9 @@ WORKDIR="/home/${USERNAME}/logs"
 # 定义变量
 export LC_ALL=C
 export UUID=${UUID:-'506e4fb1-80de-4ed4-8773-5e41966d55a8'}
-# export NEZHA_SERVER=${NEZHA_SERVER:-'nezha.yutian81.top'} 
-# export NEZHA_PORT=${NEZHA_PORT:-'5555'}     
-# export NEZHA_KEY=${NEZHA_KEY:-''} 
+export NEZHA_SERVER=${NEZHA_SERVER:-'nezha.yutian81.top'} 
+export NEZHA_PORT=${NEZHA_PORT:-'5555'}     
+export NEZHA_KEY=${NEZHA_KEY:-''} 
 export ARGO_DOMAIN=${ARGO_DOMAIN:-''}   
 export ARGO_AUTH=${ARGO_AUTH:-''} 
 export vless_port=${vless_port:-'40000'}
@@ -65,7 +65,7 @@ reading "\n确定继续安装吗？【y/n】: " choice
         read_nz_variables
         generate_config
         download_singbox
-#        run_nezha
+        run_nezha
         run_sb
         run_argo
         get_links
@@ -186,6 +186,282 @@ chmod +x ./bot
 EOF
   chmod +x "${WORKDIR}/argo.sh"
 }
+
+# 设置哪吒域名（或ip）、端口、密钥
+read_nz_variables() {
+  if [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_PORT}" ] && [ -n "${NEZHA_KEY}" ]; then
+      green "使用自定义变量运行哪吒探针"
+      return
+  else
+      reading "是否需要安装哪吒探针？【y/n】: " nz_choice
+      [[ -z $nz_choice ]] && return
+      [[ "$nz_choice" != "y" && "$nz_choice" != "Y" ]] && return
+      reading "请输入哪吒探针域名或ip：" NEZHA_SERVER
+      green "你的哪吒域名为: $NEZHA_SERVER"
+      reading "请输入哪吒探针端口（回车跳过默认使用5555）：" NEZHA_PORT
+      [[ -z "${NEZHA_PORT}" ]] && NEZHA_PORT="5555"
+      green "你的哪吒端口为: $NEZHA_PORT"
+      reading "请输入哪吒探针密钥：" NEZHA_KEY
+      green "你的哪吒密钥为: $NEZHA_KEY"
+  fi
+  # 处理 NEZHA_TLS 参数
+  tlsPorts=("443" "8443" "2096" "2087" "2083" "2053")
+  if [[ "${tlsPorts[*]}" =~ "${NEZHA_PORT}" ]]; then
+    NEZHA_TLS="--tls"
+  else
+    NEZHA_TLS=""
+  fi
+  # 生成 nezha.sh 脚本
+  cat > "${WORKDIR}/nezha.sh" << EOF
+#!/bin/bash
+
+cd ${WORKDIR} || exit
+export TMPDIR=$(pwd)
+chmod +x ./npm
+./npm -s "${NEZHA_SERVER}:${NEZHA_PORT}" -p "${NEZHA_KEY}" "${NEZHA_TLS}" >/dev/null 2>&1 &
+EOF
+  chmod +x "${WORKDIR}/nezha.sh"
+}
+
+# 下载singbo文件
+download_singbox() {
+  ARCH=$(uname -m) && DOWNLOAD_DIR="." && mkdir -p "${DOWNLOAD_DIR}" && FILE_INFO=()
+  if [ "$ARCH" == "arm" ] || [ "$ARCH" == "arm64" ] || [ "$ARCH" == "aarch64" ]; then
+      FILE_INFO=("${SB_WEB_ARMURL} web" "${AG_BOT_ARMURL} bot" "${NZ_NPM_ARMURL} npm")
+  elif [ "$ARCH" == "amd64" ] || [ "$ARCH" == "x86_64" ] || [ "$ARCH" == "x86" ]; then
+      FILE_INFO=("${SB_WEB_X86URL} web" "${AG_BOT_X86URL} bot" "${NZ_NPM_X86URL} npm")
+  else
+      echo "不支持的系统架构: $ARCH"
+      exit 1
+  fi
+  for entry in "${FILE_INFO[@]}"; do
+      URL=$(echo "$entry" | cut -d ' ' -f 1)
+      NEW_FILENAME=$(echo "$entry" | cut -d ' ' -f 2)
+      FILENAME="${DOWNLOAD_DIR}/${NEW_FILENAME}"
+      if [ -e "${FILENAME}" ]; then
+          green "$FILENAME 已经存在，跳过下载"
+      else
+          echo "正在下载 $FILENAME"
+          if wget -q -O "${FILENAME}" "${URL}"; then
+              green "$FILENAME 下载完成"
+          else
+              red "$FILENAME 下载失败"
+              exit 1
+          fi
+      fi
+      chmod +x "${FILENAME}"
+  done
+}
+
+# 获取argo隧道的域名
+get_argodomain() {
+  if [[ -n "${ARGO_AUTH}" ]]; then
+    echo ${ARGO_DOMAIN}
+  else
+    grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' boot.log | sed 's@https://@@'
+  fi
+}
+
+# 运行 NEZHA 服务
+run_nezha() {
+  if [ -e "${WORKDIR}/nezha.sh" ] && [ -n "${NEZHA_SERVER}" ] && [ -n "${NEZHA_PORT}" ] && [ -n "${NEZHA_KEY}" ]; then
+    purple "NEZHA 变量均已设置，且脚本文件已生成"
+    cd "${WORKDIR}"
+    export TMPDIR=$(pwd)
+    [ -x "${WORKDIR}/nezha.sh" ] || chmod +x "${WORKDIR}/nezha.sh"
+    [ -x "${WORKDIR}/npm" ] || chmod +x "${WORKDIR}/npm"
+    nohup ./nezha.sh >/dev/null 2>&1 &
+    sleep 2
+    if pgrep -x 'npm' > /dev/null; then
+       green "NEZHA 正在运行"
+    else
+       red "NEZHA 未运行，重启中……"
+       pkill -x 'npm' 2>/dev/null
+       nohup ./nezha.sh >/dev/null 2>&1 &
+       sleep 2
+          if pgrep -x 'npm' > /dev/null; then
+             green "NEZHA 已重启"
+          else
+             red "NEZHA 重启失败"
+          fi
+    fi
+  else
+    purple "NEZHA 变量为空，跳过运行"
+  fi
+}
+
+# 运行 singbox 服务
+run_sb() {
+  if [ -e "${WORKDIR}/web" ] && [ -e "${WORKDIR}/config.json" ]; then
+    cd "${WORKDIR}"
+    export TMPDIR=$(pwd)
+    [ -x "${WORKDIR}/web" ] || chmod +x "${WORKDIR}/web"
+    [ -e "${WORKDIR}/config.json" ] || chmod 777 "${WORKDIR}/config.json"
+    nohup ./web run -c config.json >/dev/null 2>&1 &
+    sleep 2
+    if pgrep -x 'web' > /dev/null; then
+       green "singbox 正在运行"
+    else
+       red "singbox 未运行，重启中……"
+       pkill -x 'web' 2>/dev/null
+       nohup ./web run -c config.json >/dev/null 2>&1 &
+       sleep 2
+          if pgrep -x 'web' > /dev/null; then
+             green "singbox 已重启"
+          else
+             red "singbox 重启失败"
+          fi
+    fi
+  fi
+}
+
+# 运行 argo 服务
+run_argo() {
+  if [ -e "${WORKDIR}/argo.sh" ] && [ -n "$ARGO_DOMAIN" ] && [ -n "$ARGO_AUTH" ]; then
+    purple "ARGO 变量均已设置，且脚本文件已生成"
+    cd "${WORKDIR}"
+    export TMPDIR=$(pwd)
+    [ -x "${WORKDIR}/argo.sh" ] || chmod +x "${WORKDIR}/argo.sh"
+    [ -x "${WORKDIR}/bot" ] || chmod +x "${WORKDIR}/bot"
+    nohup ./argo.sh >/dev/null 2>&1 &
+    sleep 2
+    if pgrep -x 'bot' > /dev/null; then
+       green "ARGO 正在运行"
+    else
+       red "ARGO 未运行，重启中……"
+       pkill -x 'bot' 2>/dev/null
+       nohup ./argo.sh >/dev/null 2>&1 &
+       sleep 2
+          if pgrep -x 'bot' > /dev/null; then
+             green "ARGO 已重启"
+          else
+             red "ARGO 重启失败"
+          fi
+    fi
+  else
+    red "ARGO 变量未设置"
+  fi
+}
+
+# 获取服务器ip，如果ip被墙，则自动获取服务器域名
+get_ip() {
+  ip=$(curl -s --max-time 2 ipv4.ip.sb)
+  if [ -z "$ip" ]; then
+    ip=$( [[ "$HOSTNAME" =~ s[0-9]\.serv00\.com ]] && echo "${HOSTNAME/s/mail}" || echo "$HOSTNAME" )
+  else
+    url="https://www.toolsdaquan.com/toolapi/public/ipchecking/$ip/443"
+    response=$(curl -s --location --max-time 3.5 --request GET "$url" --header 'Referer: https://www.toolsdaquan.com/ipcheck')
+    if [ -z "$response" ] || ! echo "$response" | grep -q '"icmp":"success"'; then
+        accessible=false
+    else
+        accessible=true
+    fi
+    if [ "$accessible" = false ]; then
+        ip=$( [[ "$HOSTNAME" =~ s[0-9]\.serv00\.com ]] && echo "${HOSTNAME/s/mail}" || echo "$ip" )
+    fi
+  fi
+  echo "$ip"
+}
+
+# 生成节点链接并写入到list.txt，同时检查 socks5 连接是否有效
+get_links(){
+argodomain=$(get_argodomain)
+echo -e "\e[1;32mArgoDomain:\e[1;35m${argodomain}\e[0m\n"
+sleep 1
+IP=$(get_ip)
+ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g') 
+sleep 1
+yellow "注意：v2ray或其他软件的跳过证书验证需设置为true,否则hy2或tuic节点可能不通\n"
+cat > list.txt <<EOF
+vmess://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$IP\", \"port\": \"$vmess_port\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"\", \"path\": \"/vmess?ed=2048\", \"tls\": \"\", \"sni\": \"\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+
+vmess://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$CFIP\", \"port\": \"$CFPORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/vmess?ed=2048\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+
+hysteria2://$UUID@$IP:$hy2_port/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
+
+socks5://$socks_user:$socks_pass@$IP:$socks_port
+EOF
+cat list.txt
+purple "\n$WORKDIR/list.txt 节点文件已保存"
+green "安装完成"
+sleep 2
+
+response=$(curl -s ip.sb --socks5 "$socks_user:$socks_pass@localhost:$socks_port")
+  if [[ $? -eq 0 ]]; then
+    if [[ "$response" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      green "SOCKS5 连接有效，服务器 IP 地址为: $response"
+    else
+      red "SOCKS5 连接无效，返回信息: $response"
+    fi
+  else
+    red "SOCKS5 连接无效，检查端口设置是否正确"
+  fi
+}
+
+# 是否创建面板corn定时任务
+creat_corn() {
+  reading "\n是否添加 crontab 守护进程的计划任务【y/n】: " choice
+    case "$choice" in
+        [Yy])
+       bash <(curl -s ${CORN_URL})
+       sleep 2
+           menu ;;
+        [Nn]) menu ;;
+        *) red "无效的选择，请重新输入 y 或 n" && creat_corn ;;
+    esac
+}
+
+# 卸载并重置服务器
+clean_all() {
+   echo ""
+   green "1. 仅卸载singbox"
+   echo  "----------------"
+   green "2. 重置整个服务器"
+   echo  "----------------"
+   yellow "0. 返回主菜单"
+   echo "----------------"
+   reading "\n请输入选择 (0-2): " choice
+   echo ""
+     case "${choice}" in
+        1) uninstall_singbox ;;
+        2) clean_all_files ;;
+        0) menu ;;
+        *) red "无效的选项，请输入 0-2" && clean_all ;;
+     esac
+}
+
+# 仅卸载 singbox
+uninstall_singbox() {
+  reading "\n确定要卸载吗？【y/n】: " choice
+    case "${choice}" in
+       [Yy])
+          kill -9 $(ps aux | grep '[w]eb' | awk '{print $2}')
+          kill -9 $(ps aux | grep '[b]ot' | awk '{print $2}')
+          kill -9 $(ps aux | grep '[n]pm' | awk '{print $2}')
+          rm -rf "${WORKDIR}"
+          ;;
+       [Nn]) menu ;;
+       *) red "无效的选择，请重新输入 y 或 n" && uninstall_singbox ;;
+    esac
+}
+
+# 一键重置服务器
+clean_all_files() {
+  reading "\n清理所有文件，重置服务器，确定继续吗？【y/n】: " choice
+    case "${choice}" in
+      [Yy])
+        ps aux | grep "$(whoami)" | grep -v "sshd\|bash\|grep" | awk '{print $2}' | xargs -r kill -9 > /dev/null 2>&1
+        chmod -R 755 ~/*
+        chmod -R 755 ~/.* 
+        rm -rf ~/.* 
+        rm -rf ~/*
+        sleep 2
+        green "清理已完成" ;;
+      [Nn]) menu ;; 
+      *) red "无效的选择，请重新输入 y 或 n" && menu ;;
+  esac
+}
+
 
 # 生成节点配置文件
 generate_config() {
