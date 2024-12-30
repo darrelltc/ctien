@@ -373,9 +373,9 @@ ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' |
 sleep 1
 yellow "注意：v2ray或其他软件的跳过证书验证需设置为true,否则hy2或tuic节点可能不通\n"
 cat > list.txt <<EOF
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$IP\", \"port\": \"$vmess_port\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"\", \"path\": \"/vmess?ed=2048\", \"tls\": \"\", \"sni\": \"\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$IP\", \"port\": \"$vless_port\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"\", \"path\": \"/vless?ed=2048\", \"tls\": \"\", \"sni\": \"\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
 
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$CFIP\", \"port\": \"$CFPORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/vmess?ed=2048\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
+vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$CFIP\", \"port\": \"$CFPORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/vless?ed=2048\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
 
 hysteria2://$UUID@$IP:$hy2_port/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
 
@@ -653,25 +653,6 @@ generate_config() {
   }
 }
 EOF
-}
-
-
-# 获取节点链接
-get_links() {
-argodomain=$(get_argodomain)
-echo -e "\e[1;32mArgoDomain:\e[1;35m${argodomain}\e[0m\n"
-IP=$(get_ip)
-ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
-yellow "注意：使用vless需配置TLS或其他安全加密方式\n"
-cat > list.txt <<EOF
-vless://$UUID@$IP:$vless_port?encryption=none&security=tls&sni=$argodomain&path=/vless&alpn=h2#VlessNode
-vless://$UUID@$CFIP:$CFPORT?encryption=none&security=tls&sni=$argodomain&path=/vless&alpn=h2#Vless-Argo
-hysteria2://$UUID@$IP:$hy2_port/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
-socks5://$socks_user:$socks_pass@$IP:$socks_port
-EOF
-cat list.txt
-purple "\n$WORKDIR/list.txt 节点文件已保存"
-green "安装完成"
 }
 
 # 主菜单
