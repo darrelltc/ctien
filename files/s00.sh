@@ -43,7 +43,7 @@ SB_WEB_X86URL="https://00.2go.us.kg/web"
 AG_BOT_X86URL="https://00.2go.us.kg/bot"
 NZ_NPM_X86URL="https://00.2go.us.kg/npm"
 CORN_URL="https://raw.githubusercontent.com/yutian81/serv00-ct8-ssh/main/check_sb_cron.sh"
-UPDATA_URL="https://raw.githubusercontent.com/darrelltc/ctien/master/files/serv004in1.sh"
+UPDATA_URL="https://raw.githubusercontent.com/darrelltc/ctien/master/files/s00.sh"
 REBOOT_URL="https://raw.githubusercontent.com/yutian81/serv00-ct8-ssh/main/reboot.sh"
 
 [ -d "${WORKDIR}" ] || (mkdir -p "${WORKDIR}" && chmod -R 755 "${WORKDIR}")
