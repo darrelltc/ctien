@@ -398,10 +398,8 @@ ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' |
 sleep 1
 yellow "注意：v2ray或其他软件的跳过证书验证需设置为true,否则hy2或tuic节点可能不通\n"
 cat > list.txt <<EOF
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$IP\", \"port\": \"$VLESS_PORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"\", \"path\": \"/vless?ed=2048\", \"tls\": \"\", \"sni\": \"\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
-
-vless://$(echo "{ \"v\": \"2\", \"ps\": \"$ISP\", \"add\": \"$CFIP\", \"port\": \"$CFPORT\", \"id\": \"$UUID\", \"aid\": \"0\", \"scy\": \"none\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/vless?ed=2048\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"\"}" | base64 -w0)
-
+vless://$UUID@$IP:$VLESS_PORT?host=$ARGO_DOMAIN&encryption=none&security=tls&sni=$ARGO_DOMAIN&path=/vless?ed=2048&alpn=http/1.1&fp=random&type=ws#$ISP
+vless://$UUID@$CFIP:$CFPORT?host=$ARGO_DOMAIN&encryption=none&security=tls&sni=$ARGO_DOMAIN&path=/vless?ed=2048&alpn=h3&fp=random&type=ws#$ISP
 hysteria2://$UUID@$IP:$HY2_PORT/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
 
 socks5://$SOCKS_USER:$SOCKS_PASS@$IP:$SOCKS_PORT
