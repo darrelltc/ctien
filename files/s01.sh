@@ -17,7 +17,7 @@ USERNAME=$(whoami)
 HOSTNAME=$(hostname)
 
 export LC_ALL=C
-export UUID=${UUID:-'bc97f674-c578-4940-9234-0a1da46041b9'}
+export UUID=${UUID:-'506e4fb1-80de-4ed4-8773-5e41966d55a8'}
 export VLESS_PORT=${VLESS_PORT:-'40000'}
 export SOCKS_PORT=${SOCKS_PORT:-'50000'}
 export HY2_PORT=${HY2_PORT:-'60000'}
