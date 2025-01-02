@@ -382,8 +382,8 @@ get_links() {
   yellow "注意：使用 vless 需配置 TLS 或其他安全加密方式\n"
 
   cat > list.txt <<EOF
-vless://$UUID@$IP:$vless_port?host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=//?ed=2560&alpn=http/1.1&fp=random&type=ws#Vless-Node
-vless://$UUID@$CFIP:$CFPORT?host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=/vless?ed=2048&alpn=h3&fp=random&type=ws#Vless-Argo
+vless://$UUID@$IP:$vless_port?host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=/?ed=2048&alpn=http/1.1&fp=random&type=ws#$ISP
+vless://$UUID@$CFIP:$CFPORT?host=$argodomain&encryption=none&security=tls&sni=$argodomain&path=/vless?ed=2048&alpn=h3&fp=random&type=ws#$ISP
 hysteria2://$UUID@$IP:$hy2_port/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
 socks5://$socks_user:$socks_pass@$IP:$socks_port
 EOF
