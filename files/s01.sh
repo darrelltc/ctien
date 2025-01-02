@@ -1,235 +1,124 @@
 #!/bin/bash
 
-# 定义颜色
-RE="\033[0m"
-RED="\033[1;91m"
-GREEN="\e[1;32m"
-YELLOW="\e[1;33m"
-PURPLE="\e[1;35m"
-RED() { echo -e "\e[1;91m$1\033[0m"; }
-GREEN() { echo -e "\e[1;32m$1\033[0m"; }
-YELLOW() { echo -e "\e[1;33m$1\033[0m"; }
-PURPLE() { echo -e "\e[1;35m$1\033[0m"; }
-READING() { read -p "$(RED "$1")" "$2"; }
+# Argo 域名
+ARGO_DOMAIN="修改为你的二狗域名"
 
-# 定义路径和变量
-WORKDIR="/home/$(whoami)/logs"
-UUID=${UUID:-'5195c04a-552f-4f9e-8bf9-216d257c0839'}
-ARGO_DOMAIN=${ARGO_DOMAIN:-'example.com'}   # 修改为实际域名
-ARGO_AUTH=${ARGO_AUTH:-'your-argo-auth-token'}  # 修改为实际 token
-VLESS_PORT=${VLESS_PORT:-'40000'}
-HY2_PORT=${HY2_PORT:-'41000'}
-SOCKS_PORT=${SOCKS_PORT:-'42000'}
-SOCKS_USER=${SOCKS_USER:-'abc123'}
-SOCKS_PASS=${SOCKS_PASS:-'abc456'}
-CFIP=${CFIP:-'fan.yutian.us.kg'} 
-CFPORT=${CFPORT:-'443'} 
+# 失败计数
+ARGO_FAILURE_COUNT=0
+MAX_FAILURES=3
 
-[ -d "${WORKDIR}" ] || (mkdir -p "${WORKDIR}" && chmod -R 755 "${WORKDIR}")
+# 本地端口号连接两个一样的端口
+PORT=5252
+ARGO_PORT=5252
 
-# 安装singbox
-INSTALL_SINGBOX() {
-  echo -e "${YELLOW}本脚本支持四协议共存：${PURPLE}(vless, Vless-ws-tls(argo), hysteria2, socks5)${RE}"
-  GREEN "安装完成后，脚本将在用户根目录执行"
-  cd "${WORKDIR}"
-  READ_VLESS_PORT
-  READ_HY2_PORT
-  READ_SOCKS_VARIABLES
-  ARGO_CONFIGURE
-  GENERATE_CONFIG
-  DOWNLOAD_SINGBOX
-  RUN_NEZHA
-  RUN_SB
-  RUN_ARGO
-  GET_LINKS
-  CREAT_CORN
+# Argo 配置信息
+ARGO_AUTH='二狗的秘锁'
+CFPORT=8443
+CFIP='www.xxxxxxxx.nyc.mn'
+
+# 最大重试次数
+MAX_RETRIES=3
+RETRY_INTERVAL=10
+
+# 检查脚本是否已经在运行，防止重复执行
+if pgrep -f "$(basename "$0")" | grep -v $$ > /dev/null; then
+   echo "Script is already running. Exiting."
+   exit 1
+fi
+
+# 检查 Argo 的 HTTP 状态
+check_argo_status() {
+    http_code=$(curl -o /dev/null -s -w "%{http_code}\n" "https://$ARGO_DOMAIN")
+    if [ "$http_code" == "530" ]; then
+        ((ARGO_FAILURE_COUNT++))
+        echo "Argo 服务不可用！失败次数：$ARGO_FAILURE_COUNT"
+        return 1
+    else
+        ARGO_FAILURE_COUNT=0
+        echo "Argo 服务正常。"
+        return 0
+    fi
 }
 
-# 设置vless端口
-READ_VLESS_PORT() {
-    echo "vless端口设置为: $VLESS_PORT"
+# 检查端口状态
+check_port() {
+    if sockstat -l | grep -q ":$PORT"; then
+        echo "Port $PORT is already in use."
+        return 0
+    else
+        echo "Port $PORT is not in use."
+        return 1
+    fi
 }
 
-# 设置hy2端口
-READ_HY2_PORT() {
-    echo "hysteria2端口设置为: $HY2_PORT"
+# 执行远程安装操作
+install_argo() {
+    echo "开始执行远程安装脚本..."
+    bash -c "ARGO_AUTH='$ARGO_AUTH' ARGO_DOMAIN='$ARGO_DOMAIN' CFPORT='$CFPORT' CFIP='$CFIP' ARGO_PORT='$PORT' bash <(curl -Ls https://github.love999.us.kg/onlyno999/xxxxxxxxxx/main/vless/00_vless.sh)"
+    
+    if [ $? -eq 0 ]; then
+        echo "远程安装成功完成。"
+    else
+        echo "远程安装失败。"
+    fi
 }
 
-# 设置socks5端口、用户名、密码
-READ_SOCKS_VARIABLES() {
-    echo "socks端口设置为: $SOCKS_PORT"
-    echo "socks用户名为: $SOCKS_USER"
-    echo "socks密码为: $SOCKS_PASS"
+# 重试逻辑函数
+retry_check() {
+    local retries=0
+    local max_retries=$1      # 最大重试次数
+    local retry_interval=$2   # 每次重试的间隔时间（秒）
+
+    shift 2                   # 移动参数位置，之后的参数用于具体的检查逻辑函数
+
+    while [ $retries -lt $max_retries ]; do
+        echo "重试检查第 $((retries+1)) 次..."
+
+        # 执行传递进来的检查函数
+        "$@"
+        local status=$?
+
+        # 如果检查通过，则退出重试
+        if [ $status -eq 0 ]; then
+            echo "重试后状态正常。"
+            return 0
+        fi
+
+        # 增加重试次数并等待
+        ((retries++))
+        sleep $retry_interval
+    done
+
+    echo "重试 $max_retries 次后仍然不正常。"
+    return 1
 }
 
-# 设置 argo 隧道域名、json 或 token
-ARGO_CONFIGURE() {
-  if [[ -z "${ARGO_AUTH}" || -z "${ARGO_DOMAIN}" ]]; then
-    RED "Argo 隧道未配置完整，请检查 ARGO_AUTH 和 ARGO_DOMAIN。"
-    exit 1
-  fi
+# 主循环
+while true; do
+    echo "检查时间: $(date +"%Y-%m-%d %H:%M")"
 
-  # 生成 Argo 配置
-  cat > tunnel.yml << EOF
-tunnel: $(cut -d\" -f12 <<< "$ARGO_AUTH")
-credentials-file: ${WORKDIR}/tunnel.json
-protocol: http2
+    # 检查 Argo HTTP 状态
+    retry_check $MAX_RETRIES $RETRY_INTERVAL check_argo_status
+    argo_status=$?
 
-ingress:
-  - hostname: $ARGO_DOMAIN
-    service: http://localhost:$VLESS_PORT
-    originRequest:
-      noTLSVerify: true
-  - service: http_status:404
-EOF
-  # 使用 json 时 Argo 隧道的启动参数
-  ARGS="tunnel --edge-ip-version auto --config tunnel.yml run"
-  GREEN "ARGO_AUTH 是 Json 格式，将使用 Json 连接 ARGO；tunnel.yml 配置文件已生成"
-}
+    # 检查端口状态
+    retry_check $MAX_RETRIES $RETRY_INTERVAL check_port
+    port_status=$?
 
-# 下载singbox文件
-DOWNLOAD_SINGBOX() {
-  GREEN "下载singbox文件"
-}
+    # 如果 Argo 服务不正常或端口未被占用，则执行远程安装操作
+    if [ $argo_status -ne 0 ] || [ $port_status -ne 0 ]; then
+        echo "检测到异常，开始执行远程安装操作..."
+        install_argo
 
-# 生成节点配置文件
-GENERATE_CONFIG() {
-  openssl ecparam -genkey -name prime256v1 -out "private.key"
-  openssl req -new -x509 -days 3650 -key "private.key" -out "cert.pem" -subj "/CN=${USERNAME}.serv00.net"
-  
-  cat > config.json << EOF
-{
-  "log": {
-    "disabled": true,
-    "level": "info",
-    "timestamp": true
-  },
-  "dns": {
-    "servers": [
-      {
-        "tag": "google",
-        "address": "tls://8.8.8.8",
-        "strategy": "ipv4_only",
-        "detour": "direct"
-      }
-    ]
-  },
-  "inbounds": [
-    {
-      "tag": "vless-in",
-      "type": "vless",
-      "listen": "::",
-      "listen_port": $VLESS_PORT,
-      "users": [
-        {
-          "uuid": "$UUID",
-          "encryption": "none"
-        }
-      ],
-      "transport": {
-        "type": "ws",
-        "path": "/vless",
-        "early_data_header_name": "Sec-WebSocket-Protocol"
-      }
-    },
-    {
-      "tag": "hysteria-in",
-      "type": "hysteria2",
-      "listen": "::",
-      "listen_port": $HY2_PORT,
-      "users": [
-        {
-          "password": "$UUID"
-        }
-      ],
-      "masquerade": "https://bing.com",
-      "tls": {
-        "enabled": true,
-        "alpn": ["h3"],
-        "certificate_path": "cert.pem",
-        "key_path": "private.key"
-      }
-    },
-    {
-      "tag": "socks-in",
-      "type": "socks",
-      "listen": "::",
-      "listen_port": $SOCKS_PORT,
-      "users": [
-        {
-          "username": "$SOCKS_USER",
-          "password": "$SOCKS_PASS"
-        }
-      ]
-    }
-  ],
-  "outbounds": [
-    {
-      "type": "direct",
-      "tag": "direct"
-    },
-    {
-      "type": "block",
-      "tag": "block"
-    }
-  ]
-}
-EOF
-}
+        # 如果 Argo 的失败次数超过最大值，进行重置
+        if [ $ARGO_FAILURE_COUNT -ge $MAX_FAILURES ]; then
+            echo "Argo 服务连续失败次数达到最大值，进行重置..."
+            ARGO_FAILURE_COUNT=0
+        fi
+    else
+        echo "Argo 服务和端口状态都正常，无需重新安装。"
+    fi
 
-# 获取节点链接
-GET_LINKS() {
-  ARGO_DOMAIN=$(GET_ARGODOMAIN)
-  echo "ArgoDomain: $ARGO_DOMAIN"
-  IP=$(GET_IP)
-  echo "服务器IP: $IP"
-  ISP=$(curl -s https://speed.cloudflare.com/meta | awk -F\" '{print $26"-"$18}' | sed -e 's/ /_/g')
-
-  cat > list.txt <<EOF
-vless://$UUID@$IP:$VLESS_PORT?encryption=none&security=tls&sni=$ARGO_DOMAIN&path=/vless&alpn=h2#VlessNode
-vless://$UUID@$CFIP:$CFPORT?encryption=none&security=tls&sni=$ARGO_DOMAIN&path=/vless&alpn=h2#Vless-Argo
-hysteria2://$UUID@$IP:$HY2_PORT/?sni=www.bing.com&alpn=h3&insecure=1#$ISP
-socks5://$SOCKS_USER:$SOCKS_PASS@$IP:$SOCKS_PORT
-EOF
-  cat list.txt
-}
-
-# 获取IP
-GET_IP() {
-  ip=$(curl -s --max-time 2 ipv4.ip.sb)
-  echo "$ip"
-}
-
-# 获取Argo域名
-GET_ARGODOMAIN() {
-  if [[ -n "${ARGO_AUTH}" ]]; then
-    echo ${ARGO_DOMAIN}
-  else
-    grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' boot.log | sed 's@https://@@'
-  fi
-}
-
-# 启动NEZHA服务
-RUN_NEZHA() {
-  GREEN "启动NEZHA服务"
-  # 启动代码
-}
-
-# 启动singbox服务
-RUN_SB() {
-  GREEN "启动singbox服务"
-  # 启动代码
-}
-
-# 启动argo隧道
-RUN_ARGO() {
-  GREEN "启动argo隧道"
-  # 启动代码
-}
-
-# 主菜单
-MENU() {
-   INSTALL_SINGBOX
-}
-
-MENU
+    # 随机等待 1 到 60 秒之间
+    sleep $((1 + RANDOM % 60))
+done
