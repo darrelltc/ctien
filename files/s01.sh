@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# 定义颜色
 re="\033[0m"
 red="\033[1;91m"
 green="\e[1;32m"
@@ -16,7 +17,7 @@ USERNAME=$(whoami)
 HOSTNAME=$(hostname)
 WORKDIR="/home/${USERNAME}/logs"
 
-# 定义变量（可根据需求修改默认值）
+# 定义变量
 export LC_ALL=C
 export UUID=${UUID:-'506e4fb1-80de-4ed4-8773-5e41966d55a8'}
 export VLESS_PORT=${VLESS_PORT:-'40000'}
@@ -30,7 +31,7 @@ export NEZHA_SERVER=${NEZHA_SERVER:-''}
 export NEZHA_PORT=${NEZHA_PORT:-'5555'}     
 export NEZHA_KEY=${NEZHA_KEY:-''} 
 export CFIP=${CFIP:-'www.visa.com.tw'} 
-export CFPORT=${CFPORT:-'443'}
+export CFPORT=${CFPORT:-'443'} 
 
 # 定义文件下载地址
 SB_WEB_ARMURL="https://github.com/eooce/test/releases/download/arm64/sb"
