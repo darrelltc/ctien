@@ -1,5 +1,16 @@
 #!/bin/bash
 
+re="\033[0m"
+red="\033[1;91m"
+green="\e[1;32m"
+yellow="\e[1;33m"
+purple="\e[1;35m"
+red() { echo -e "\e[1;91m$1\033[0m"; }
+green() { echo -e "\e[1;32m$1\033[0m"; }
+yellow() { echo -e "\e[1;33m$1\033[0m"; }
+purple() { echo -e "\e[1;35m$1\033[0m"; }
+reading() { read -p "$(red "$1")" "$2"; }
+
 # 定义路径
 USERNAME=$(whoami)
 HOSTNAME=$(hostname)
@@ -8,18 +19,18 @@ WORKDIR="/home/${USERNAME}/logs"
 # 定义变量（可根据需求修改默认值）
 export LC_ALL=C
 export UUID=${UUID:-'506e4fb1-80de-4ed4-8773-5e41966d55a8'}
-export NEZHA_SERVER=${NEZHA_SERVER:-'nezha.yutian81.top'} 
+export VLESS_PORT=${VLESS_PORT:-'40000'}
+export SOCKS_PORT=${SOCKS_PORT:-'50000'}
+export HY2_PORT=${HY2_PORT:-'60000'}
+export SOCKS_USER=${SOCKS_USER:-'abc123'}
+export SOCKS_PASS=${SOCKS_PASS:-'abc456'}
+export ARGO_DOMAIN=${ARGO_DOMAIN:-''}   
+export ARGO_AUTH=${ARGO_AUTH:-''}
+export NEZHA_SERVER=${NEZHA_SERVER:-''} 
 export NEZHA_PORT=${NEZHA_PORT:-'5555'}     
 export NEZHA_KEY=${NEZHA_KEY:-''} 
-export ARGO_DOMAIN=${ARGO_DOMAIN:-''}   
-export ARGO_AUTH=${ARGO_AUTH:-''} 
-export vless_port=${vless_port:-'40000'}
-export hy2_port=${hy2_port:-'41000'}
-export socks_port=${socks_port:-'42000'}
-export socks_user=${socks_user:-'abc123'}
-export socks_pass=${socks_pass:-'abc456'}
-export CFIP=${CFIP:-'fan.yutian.us.kg'} 
-export CFPORT=${CFPORT:-'443'} 
+export CFIP=${CFIP:-'www.visa.com.tw'} 
+export CFPORT=${CFPORT:-'443'}
 
 # 定义文件下载地址
 SB_WEB_ARMURL="https://github.com/eooce/test/releases/download/arm64/sb"
