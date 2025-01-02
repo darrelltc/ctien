@@ -31,7 +31,6 @@ CFPORT=${CFPORT:-'443'}
 INSTALL_SINGBOX() {
   echo -e "${YELLOW}本脚本支持四协议共存：${PURPLE}(vless, Vless-ws-tls(argo), hysteria2, socks5)${RE}"
   GREEN "安装完成后，脚本将在用户根目录执行"
-  # 这里可以省略交互过程，直接继续执行
   cd "${WORKDIR}"
   READ_VLESS_PORT
   READ_HY2_PORT
@@ -39,6 +38,7 @@ INSTALL_SINGBOX() {
   ARGO_CONFIGURE
   GENERATE_CONFIG
   DOWNLOAD_SINGBOX
+  RUN_NEZHA
   RUN_SB
   RUN_ARGO
   GET_LINKS
@@ -89,13 +89,11 @@ EOF
 
 # 下载singbox文件
 DOWNLOAD_SINGBOX() {
-  # 下载singbox文件并处理
   GREEN "下载singbox文件"
 }
 
 # 生成节点配置文件
 GENERATE_CONFIG() {
-  # 生成证书和配置文件
   openssl ecparam -genkey -name prime256v1 -out "private.key"
   openssl req -new -x509 -days 3650 -key "private.key" -out "cert.pem" -subj "/CN=${USERNAME}.serv00.net"
   
@@ -200,6 +198,33 @@ EOF
 GET_IP() {
   ip=$(curl -s --max-time 2 ipv4.ip.sb)
   echo "$ip"
+}
+
+# 获取Argo域名
+GET_ARGODOMAIN() {
+  if [[ -n "${ARGO_AUTH}" ]]; then
+    echo ${ARGO_DOMAIN}
+  else
+    grep -oE 'https://[[:alnum:]+\.-]+\.trycloudflare\.com' boot.log | sed 's@https://@@'
+  fi
+}
+
+# 启动NEZHA服务
+RUN_NEZHA() {
+  GREEN "启动NEZHA服务"
+  # 启动代码
+}
+
+# 启动singbox服务
+RUN_SB() {
+  GREEN "启动singbox服务"
+  # 启动代码
+}
+
+# 启动argo隧道
+RUN_ARGO() {
+  GREEN "启动argo隧道"
+  # 启动代码
 }
 
 # 主菜单
