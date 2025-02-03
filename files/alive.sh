@@ -17,8 +17,8 @@ HOSTNAME=$(hostname)
 WORKDIR="/home/${USERNAME}/logs"
 
 # 定义文件下载地址
-REBOOT_URL="https://raw.githubusercontent.com/yutian81/serv00-ct8-ssh/main/reboot.sh"
-CORN_URL="https://raw.githubusercontent.com/yutian81/serv00-ct8-ssh/main/check_sb_cron.sh"
+REBOOT_URL="https://raw.githubusercontent.com/darrelltc/ctien/master/files/reboot.sh"
+CORN_URL="https://raw.githubusercontent.com/darrelltc/ctien/master/files/check_cron.sh"
 
 [ -d "${WORKDIR}" ] || (mkdir -p "${WORKDIR}" && chmod -R 755 "${WORKDIR}")
 
