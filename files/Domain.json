@@ -1,5 +1,8 @@
 [
   { "domain": "ctien.cloudns.be", "registrationDate": "2024-08-17", "expirationDate": "2034-12-20", "system": "Cloudns", "systemURL": "https://www.cloudns.net/" },
+  { "domain": "ctien.dpdns.org", "registrationDate": "2024-08-21", "expirationDate": "2026-08-21", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" },
+  { "domain": "stien.dpdns.org", "registrationDate": "2024-09-06", "expirationDate": "2026-09-06", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" },
+  { "domain": "utien.dpdns.org", "registrationDate": "2024-09-06", "expirationDate": "2026-09-06", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" }, 
   { "domain": "ctien.us.kg", "registrationDate": "2024-08-21", "expirationDate": "2025-08-21", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
   { "domain": "stien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
   { "domain": "utien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" }, 
