@@ -11,8 +11,5 @@
   { "domain": "utien.ggff.net", "registrationDate": "2024-11-24", "expirationDate": "2026-11-24", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "gsgl.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2028-11-30", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "jsxy.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2026-03-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "jsbj.ggff.net", "registrationDate": "2020-02-01", "expirationDate": "2026-03-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "msxy.ggff.net", "registrationDate": "2025-01-01", "expirationDate": "2030-01-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "msjj.ggff.net", "registrationDate": "2024-12-31", "expirationDate": "2034-12-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "gfjk.ggff.net", "registrationDate": "2020-02-01", "expirationDate": "2031-09-30", "system": "l53", "systemURL": "https://customer.l53.net/" }
+  { "domain": "jsbj.ggff.net", "registrationDate": "2020-02-01", "expirationDate": "2026-03-31", "system": "l53", "systemURL": "https://customer.l53.net/" }
 ]
