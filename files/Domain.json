@@ -3,13 +3,13 @@
   { "domain": "ctien.dpdns.org", "registrationDate": "2024-08-21", "expirationDate": "2026-08-21", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" },
   { "domain": "stien.dpdns.org", "registrationDate": "2024-09-06", "expirationDate": "2026-09-06", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" },
   { "domain": "utien.dpdns.org", "registrationDate": "2024-09-06", "expirationDate": "2026-09-06", "system": "dpdns.org", "systemURL": "https://dash.domain.digitalplat.org/panel/main" }, 
-  { "domain": "ctien.us.kg", "registrationDate": "2024-08-21", "expirationDate": "2025-08-21", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
-  { "domain": "stien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" },
-  { "domain": "utien.us.kg", "registrationDate": "2024-09-06", "expirationDate": "2025-09-06", "system": "us.kg", "systemURL": "https://register.us.kg/panel/main" }, 
   { "domain": "ctien.ggff.net", "registrationDate": "2024-11-16", "expirationDate": "2026-11-16", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "stien.ggff.net", "registrationDate": "2024-11-16", "expirationDate": "2026-11-16", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "utien.ggff.net", "registrationDate": "2024-11-24", "expirationDate": "2026-11-24", "system": "l53", "systemURL": "https://customer.l53.net/" },
-  { "domain": "gsgl.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2028-11-30", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "msbj.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2034-12-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "msyt.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2030-01-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "gsjk.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2028-11-30", "system": "l53", "systemURL": "https://customer.l53.net/" },
+  { "domain": "gfjk.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2031-09-30", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "jsxy.ggff.net", "registrationDate": "2024-11-11", "expirationDate": "2026-03-31", "system": "l53", "systemURL": "https://customer.l53.net/" },
   { "domain": "jsbj.ggff.net", "registrationDate": "2020-02-01", "expirationDate": "2026-03-31", "system": "l53", "systemURL": "https://customer.l53.net/" }
 ]
